@@ -1,35 +1,29 @@
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.draw.VerticalPositionMark;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.stream.Stream;
+
 
 public class PDFGenerator {
     private int factureNumber;
-    private String name;
-    private String secondname;
+    private String buyer;
 
-    public PDFGenerator(int factureNumber, String name, String secondname) {
+    public PDFGenerator(int factureNumber, String buyer) {
         this.factureNumber = factureNumber;
-        this.name = name;
-        this.secondname = secondname;
+        this.buyer = buyer;
     }
 
-    public void finalGenerator () throws FileNotFoundException, DocumentException {
+    public void finalGenerator () throws IOException, DocumentException {
                 var doc = new Document();
-                PdfWriter.getInstance(doc, new FileOutputStream("Faktura " + factureNumber +"-"+ dateNumber()+" "+name+" "+secondname +".pdf"));
+                PdfWriter.getInstance(doc, new FileOutputStream(fileName()));
                 doc.open();
                 addFactureTitle(doc,factureNumber);
-                addAnything(doc);
+                addContent(doc);
                 doc.close();
             }
 
@@ -37,33 +31,62 @@ public class PDFGenerator {
         document.addTitle("Faktura numer: " + number);
     }
 
-    private void addAnything(Document document) throws DocumentException {
-                document.add(new Paragraph("Title of the document"));
-                Paragraph paragraph = new Paragraph();
-                addEmptyLine(paragraph,2);
-                paragraph.add("Faktura wystawiona dnia: ");
-                addDate(paragraph);
-                document.add(paragraph);
-                document.add (new Paragraph("Sprawdzenie"));
+    private void addContent(Document document) throws DocumentException, IOException {
+
+        addLogo(document);
+        addShopInformation(document);
+        addTitle(document);
 
     }
 
-    private void addEmptyLine(Paragraph paragraph,int number) {
-        for (int i = 0; i < number; i++) {
-            paragraph.add(new Paragraph("  "));
-        }
+    private void addTitle(Document document) throws IOException, DocumentException {
+        Paragraph paragraph = new Paragraph("FAKTURA VAT " + factureNumber + "/" + dateNumber() + "/S",setFont(16));
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        document.add(paragraph);
     }
 
-    private void addDate(Paragraph paragraph) {
+    private void addShopInformation(Document document) throws DocumentException, IOException {
+        Chunk glue = new Chunk(new VerticalPositionMark());
+        Paragraph paragraph = new Paragraph("Miejscowość: Sosnowiec",setFont());
+        paragraph.add(new Chunk(glue));
+        paragraph.add(new Paragraph("Oryginał/Kopia",setFont()));
+        Paragraph paragraph1 = new Paragraph("Data wystawienia: " + addDate());
+        document.add(paragraph);
+        document.add(paragraph1);
+    }
+
+    private Font setFont() throws IOException, DocumentException {
+        int defaultSize = 12;
+        BaseFont helvetica = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.EMBEDDED);
+        return new Font(helvetica,defaultSize);
+    }
+
+    private Font setFont(int size) throws IOException, DocumentException {
+        BaseFont helvetica = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.EMBEDDED);
+        return new Font(helvetica,size);
+    }
+
+    private void addLogo(Document doc) throws IOException, DocumentException {
+        Image logo = Image.getInstance("LogoAmerSports.jpg");
+        logo.setAlignment(Image.MIDDLE);
+        doc.add(logo);
+    }
+
+
+    private String addDate() {
         Date nowDate = new Date();
         SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd" );
-        paragraph.add(new Paragraph(sdf1.format(nowDate)));
+        return sdf1.format(nowDate);
     }
 
     private String dateNumber() {
         Date nowDate = new Date();
         SimpleDateFormat sdf1 = new SimpleDateFormat("yy" );
         return sdf1.format(nowDate);
+    }
+
+    private String fileName() {
+        return "Faktura " + factureNumber +"-"+ dateNumber()+" "+ buyer +".pdf";
     }
 
 }

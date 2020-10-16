@@ -36,6 +36,17 @@ public class PDFGenerator {
         addLogo(document);
         addShopInformation(document);
         addTitle(document);
+        addSeller(document);
+
+    }
+
+    private void addSeller(Document document) throws DocumentException {
+        Paragraph paragraph = new Paragraph("Sprzedawca:    AMER SPORTS POLAND SP. Z O.O.");
+        Paragraph paragraph1 = new Paragraph("Adres:              ul.Opolska 110, 31-323 Kraków");
+        Paragraph paragraph2 = new Paragraph("NIP:                  526 285 53 43");
+        document.add(paragraph);
+        document.add(paragraph1);
+        document.add(paragraph2);
 
     }
 
@@ -43,16 +54,18 @@ public class PDFGenerator {
         Paragraph paragraph = new Paragraph("FAKTURA VAT " + factureNumber + "/" + dateNumber() + "/S",setFont(16));
         paragraph.setAlignment(Element.ALIGN_CENTER);
         document.add(paragraph);
+        addEmptyParagraph(document,2);
     }
 
     private void addShopInformation(Document document) throws DocumentException, IOException {
         Chunk glue = new Chunk(new VerticalPositionMark());
-        Paragraph paragraph = new Paragraph("Miejscowość: Sosnowiec",setFont());
+        Paragraph paragraph = new Paragraph("Miejscowość:        " + "     Sosnowiec",setFont());
         paragraph.add(new Chunk(glue));
         paragraph.add(new Paragraph("Oryginał/Kopia",setFont()));
-        Paragraph paragraph1 = new Paragraph("Data wystawienia: " + addDate());
+        Paragraph paragraph1 = new Paragraph("Data wystawienia:     " + addDate());
         document.add(paragraph);
         document.add(paragraph1);
+        addEmptyParagraph(document,2);
     }
 
     private Font setFont() throws IOException, DocumentException {
@@ -66,12 +79,18 @@ public class PDFGenerator {
         return new Font(helvetica,size);
     }
 
-    private void addLogo(Document doc) throws IOException, DocumentException {
+    private void addLogo(Document document) throws IOException, DocumentException {
         Image logo = Image.getInstance("LogoAmerSports.jpg");
         logo.setAlignment(Image.MIDDLE);
-        doc.add(logo);
+        document.add(logo);
+        addEmptyParagraph(document,1);
     }
 
+    private void addEmptyParagraph(Document document, int size) throws DocumentException {
+        for (int i = 0; i < size; i++) {
+            document.add (new Paragraph(" "));
+        }
+    }
 
     private String addDate() {
         Date nowDate = new Date();

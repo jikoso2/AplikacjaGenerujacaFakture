@@ -8,7 +8,6 @@ public class Main {
 
         PDFGenerator gen = new PDFGenerator(123,"Jarosław Czerniak", "ul. Szkolna 25/10","41-400 Mysłowice", false, 1234567);
         gen.finalGenerator();
-
     }
 
 

@@ -2,12 +2,15 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.VerticalPositionMark;
 
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -31,7 +34,7 @@ public class PDFGenerator {
     }
 
     public void finalGenerator () throws IOException, DocumentException {
-                var doc = new Document();
+                var doc = new Document(PageSize.A4,25,25,25,25);
                 PdfWriter.getInstance(doc, new FileOutputStream(fileName()));
                 doc.open();
                 addFactureTitle(doc,factureNumber);
@@ -52,9 +55,131 @@ public class PDFGenerator {
         addBuyer(document);
         addNIP(document);
         addPaymentMethod(document);
+        addItemTable(document);
+        addSummary(document);
+        addSignature(document);
 
     }
 
+    private void addSignature(Document document) throws IOException, DocumentException {
+
+        addEmptyParagraph(document,3);
+
+        Paragraph paragraph1 = new Paragraph("_ _ _ _ _ _ _ _ _ _ _ _ _ _");
+        paragraph1.setAlignment(Element.ALIGN_RIGHT);
+        document.add(paragraph1);
+
+        Paragraph paragraph = new Paragraph("pieczątka i podpis         ",setFont(false));
+        paragraph.setAlignment(Element.ALIGN_RIGHT);
+        document.add(paragraph);
+
+    }
+
+    private void addSummary(Document document) throws IOException, DocumentException {
+        addEmptyParagraph(document,1);
+        Paragraph paragraph = new Paragraph("Do zapłaty:              " + roundValues(3 * 133.30F) + " zł",setFont(true));
+        document.add(paragraph);
+
+        Paragraph paragraph1 = new Paragraph();
+        Chunk first = new Chunk ("Słownie złotych:       ",setFont(true));
+        Chunk second = new Chunk(NumberTranslation.translacja((int) (3* 133.30F))+"złotych",setFont(false));
+        paragraph1.add(first); paragraph1.add(second);
+
+        document.add(paragraph1);
+
+    }
+
+
+    private void addItemTable(Document document) throws DocumentException, IOException {
+        PdfPTable table = new PdfPTable(7);
+
+        tableTemplate(table);
+        setColumnWidths(table);
+
+        table.setHeaderRows(1);
+
+        createCellToTable(table, "1.");
+        createCellToTable(table, "BUTY SPEEDCROSS R.7");
+        createCellToTable(table, Integer.toString(3));
+        createCellToTable(table, roundValues(3 * 133.30F / 1.23F) + " zł");
+        createCellToTable(table, roundValues((3 * 133.30F) - (3 * 133.30F / 1.23F)) + " zł");
+        createCellToTable(table, roundValues(133.30F) +" zł");
+        createCellToTable(table, roundValues(3 * 133.30F) + " zł");
+
+
+        addLastTableRow(table);
+
+        document.add(table);
+    }
+
+    private String roundValues(float value){
+        value *= 100;
+        value = Math.round(value);
+        value /= 100;
+        DecimalFormat myFormatter = new DecimalFormat("###.00");
+        return myFormatter.format(value);
+    }
+
+    private void addLastTableRow(PdfPTable table) throws DocumentException, IOException {
+
+        createCellToLastRow(table, " ");
+        createCellToLastRow(table, " ");
+        createCellToLastRow(table, " ");
+        createCellToLastRow(table, roundValues(3 * 133.30F / 1.23F) + " zł");
+        createCellToLastRow(table, roundValues((3 * 133.30F) - (3 * 133.30F / 1.23F)) + " zł");
+        createCellToLastRow(table, roundValues(133.30F) +" zł");
+        createCellToLastRow(table, roundValues(3 * 133.30F) + " zł");
+
+    }
+
+    private void setColumnWidths(PdfPTable table) throws DocumentException {
+        float[] columnWidths = new float[]{40f,255f,40f,65f,65f,73f,65f};
+        table.setWidthPercentage(columnWidths,PageSize.A4);
+    }
+
+    private void tableTemplate(PdfPTable table) throws IOException, DocumentException {
+        createCellToTableTemplate(table,"L.P");
+        createCellToTableTemplate(table,"Nazwa towaru");
+        createCellToTableTemplate(table,"Ilość");
+        createCellToTableTemplate(table,"Wartość netto");
+        createCellToTableTemplate(table,"Podatek VAT (23%)");
+        createCellToTableTemplate(table,"Wartość jednostkowa");
+        createCellToTableTemplate(table,"Wartość brutto");
+    }
+
+    private void createCellToTableTemplate(PdfPTable table,String name) throws IOException, DocumentException {
+        Font font =setFont(false);
+        font.setSize(11);
+        Paragraph phr = new Paragraph(name,font);
+        PdfPCell cell = new PdfPCell(phr);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        cell.setPaddingBottom(7);
+        cell.setPaddingTop(7);
+        table.addCell(cell);
+    }
+
+    private void createCellToTable(PdfPTable table,String name) throws IOException, DocumentException {
+        Paragraph phr = new Paragraph(name,setFont(false));
+        PdfPCell cell = new PdfPCell(phr);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPaddingBottom(6);
+        cell.setPaddingTop(3);
+        table.addCell(cell);
+    }
+
+    private void createCellToLastRow(PdfPTable table,String name) throws IOException, DocumentException {
+        Paragraph phr = new Paragraph(name,setFont(10));
+        PdfPCell cell = new PdfPCell(phr);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPaddingBottom(4);
+        cell.setPaddingTop(2);
+        cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        table.addCell(cell);
+    }
 
 
     private void addPaymentMethod(Document document) throws IOException, DocumentException {
